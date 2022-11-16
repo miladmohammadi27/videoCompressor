@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  video_compressor_django:
+    build: .
+    container_name: video_compressor_django
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/code
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=1
+      - DJANGO_ALLOWED_HOSTS=*
+      - CELERY_BROKER=redis://video_compressor_redis:6379/0
+      - CELERY_BACKEND=redis://video_compressor_redis:6379/0
+    depends_on:
+      - video_compressor_redis
+
+  video_compressor_celery:
+    build: .
+    container_name: video_compressor_celery
+    command: celery -A videoCompressor worker --loglevel=INFO
+    volumes:
+      - .:/code
+    depends_on:
+      - video_compressor_django
+      - video_compressor_redis
+
+  video_compressor_redis:
+    image: "redis:alpine"
+    container_name: video_compressor_redis
+
+
+
+
+
+
+
